@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_REQUIREDFIELDS_VERSION', '1.0.0');
+define('PLUGIN_REQUIREDFIELDS_VERSION', '1.1.0');
 
 require_once __DIR__ . '/src/Rules.php';
 
@@ -32,6 +32,15 @@ function plugin_init_requiredfields()
 
     $PLUGIN_HOOKS['csrf_compliant']['requiredfields'] = true;
     $types = array_fill_keys(array_keys(PluginRequiredfieldsRules::load()), 'plugin_requiredfields_validate');
+    // Custom asset definitions are not loaded yet when plugins init, so read them from the table.
+    global $DB;
+    if ($DB instanceof DBmysql && $DB->connected && $DB->tableExists('glpi_assets_assetdefinitions')) {
+        foreach (getAllDataFromTable('glpi_assets_assetdefinitions', ['is_active' => 1]) as $row) {
+            $definition = new \Glpi\Asset\AssetDefinition();
+            $definition->fields = $row;
+            $types[$definition->getAssetClassName()] = 'plugin_requiredfields_validate';
+        }
+    }
     $PLUGIN_HOOKS['pre_item_add']['requiredfields']    = $types;
     $PLUGIN_HOOKS['pre_item_update']['requiredfields'] = $types;
 }
@@ -59,7 +68,10 @@ function plugin_requiredfields_validate(CommonDBTM $item)
         $current['_useremails'] = UserEmail::getDefaultForUser($item->getID());
     }
 
-    $missing = PluginRequiredfieldsRules::missing(PluginRequiredfieldsRules::load()[$item::class] ?? [], $item->input, $current);
+    $rules = $item instanceof \Glpi\Asset\Asset
+        ? PluginRequiredfieldsRules::forCustomAsset($item::getDefinition())
+        : PluginRequiredfieldsRules::load()[$item::class] ?? [];
+    $missing = PluginRequiredfieldsRules::missing($rules, $item->input, $current);
     if ($missing) {
         Session::addMessageAfterRedirect(
             sprintf(__('Please fill in the required fields: %s', 'requiredfields'), implode(', ', $missing)),

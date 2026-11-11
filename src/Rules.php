@@ -6,7 +6,7 @@
  */
 final class PluginRequiredfieldsRules
 {
-    /** Item types this plugin knows how to check (custom assets have native "required" in GLPI 11). */
+    /** Native item types configured through rules.php. Custom assets use their own definition, see forCustomAsset(). */
     public const SUPPORTED = ['Computer', 'Monitor', 'Printer', 'NetworkEquipment', 'Phone', 'Line', 'Rack', 'User'];
 
     public static function file(): string
@@ -20,6 +20,24 @@ final class PluginRequiredfieldsRules
         if ($rules === null) {
             $loaded = is_readable(self::file()) ? include self::file() : [];
             $rules = array_intersect_key(is_array($loaded) ? $loaded : [], array_flip(self::SUPPORTED));
+        }
+        return $rules;
+    }
+
+    /**
+     * Fields marked "Required" in a GLPI 11 custom asset definition (Fields tab).
+     * GLPI only enforces that in the browser, and empty dropdowns ("0") slip through.
+     */
+    public static function forCustomAsset(\Glpi\Asset\AssetDefinition $definition): array
+    {
+        $labels = $definition->getAllFields();
+        $rules = [];
+        foreach ($definition->getDecodedFieldsField() as $field) {
+            $key = $field['key'] ?? '';
+            // shortcut: custom fields (custom_*) are skipped, their values live in a JSON column; add when someone needs them
+            if (!empty($field['field_options']['required']) && !str_starts_with($key, 'custom_') && isset($labels[$key])) {
+                $rules[$key] = $labels[$key]['text'];
+            }
         }
         return $rules;
     }

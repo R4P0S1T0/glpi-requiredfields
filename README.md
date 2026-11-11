@@ -2,7 +2,10 @@
 
 GLPI 11 plugin that enforces required fields on native assets and users when they are saved from the web form, leaving inventory, API, imports and mass actions untouched.
 
-GLPI 11 custom assets already have a native "required" option per field. Native item types (computers, monitors, printers…) do not, and this plugin fills that gap.
+This plugin covers two cases:
+
+- **Native item types** (computers, monitors, printers…) have no "required" option in GLPI, so the plugin adds one, configured in `rules.php`.
+- **Custom assets** in GLPI 11 already have a "Required" option per field, in the definition's Fields tab. But GLPI only enforces it in the browser, and empty dropdowns still pass. The plugin enforces those same options on the server, with no extra configuration.
 
 ## How it works
 
@@ -15,7 +18,7 @@ GLPI 11 custom assets already have a native "required" option per field. Native 
   - mass actions, imports such as `datainjection`, LDAP sync, the REST API and rules;
   - users saving their own preferences.
 
-Supported item types: `Computer`, `Monitor`, `Printer`, `NetworkEquipment`, `Phone`, `Line`, `Rack`, `User`.
+Item types supported through `rules.php`: `Computer`, `Monitor`, `Printer`, `NetworkEquipment`, `Phone`, `Line`, `Rack`, `User`. Every active custom asset is also covered, using its own definition.
 
 Things that cannot be required on save, because they live in tabs and not in the form:
 
@@ -44,7 +47,7 @@ sudo -u www-data cp plugins/requiredfields/rules.example.php files/_plugins/requ
 
 Edit that file. Each key is the field's database column, and each value is the label shown in the error message. For checkboxes, `a|b|c` means at least one of them must be filled.
 
-Without a `rules.php` file, the plugin does nothing.
+Without a `rules.php` file, native item types are not checked. Custom assets still are.
 
 ## Development
 
