@@ -20,9 +20,21 @@ This plugin covers two cases:
 
 Item types supported through `rules.php`: `Computer`, `Monitor`, `Printer`, `NetworkEquipment`, `Phone`, `Line`, `Rack`, `User`. Every active custom asset is also covered, using its own definition.
 
+### Users: group and company
+
+If your entities are companies and each group belongs to one of them, set these two options in `_options`:
+
+- **`user_group_on_create`:** adds a required **Group** field to the new-user form. When the user is saved:
+  - they join that group, and it becomes their default group;
+  - their **default entity** becomes the group's entity;
+  - the authorization entity is pre-selected to the group's entity. It stays editable, so you can pick the root entity with recursion for staff who need every company.
+- **`user_require_company`:** later edits never change anything automatically. But a user cannot be saved while they have **no group** or a **default entity set to the root entity or the full structure**. Users holding a profile listed in `exempt_profiles` are skipped.
+
+This keeps tools that file documents in the user's default entity in the right place, such as Protocols Manager PDFs.
+
 Things that cannot be required on save, because they live in tabs and not in the form:
 
-- user groups and authorizations;
+- user groups and authorizations, except through the options above;
 - documents and attachments.
 
 ## Install

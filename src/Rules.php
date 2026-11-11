@@ -14,14 +14,25 @@ final class PluginRequiredfieldsRules
         return GLPI_PLUGIN_DOC_DIR . '/requiredfields/rules.php';
     }
 
+    private static function raw(): array
+    {
+        static $raw = null;
+        if ($raw === null) {
+            $loaded = is_readable(self::file()) ? include self::file() : [];
+            $raw = is_array($loaded) ? $loaded : [];
+        }
+        return $raw;
+    }
+
     public static function load(): array
     {
-        static $rules = null;
-        if ($rules === null) {
-            $loaded = is_readable(self::file()) ? include self::file() : [];
-            $rules = array_intersect_key(is_array($loaded) ? $loaded : [], array_flip(self::SUPPORTED));
-        }
-        return $rules;
+        return array_intersect_key(self::raw(), array_flip(self::SUPPORTED));
+    }
+
+    /** The "_options" entry of rules.php (see rules.example.php). */
+    public static function options(): array
+    {
+        return is_array(self::raw()['_options'] ?? null) ? self::raw()['_options'] : [];
     }
 
     /**

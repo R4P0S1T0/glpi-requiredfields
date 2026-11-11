@@ -5,7 +5,7 @@ require __DIR__ . '/../src/Rules.php';
 
 $R = PluginRequiredfieldsRules::class;
 $example = require __DIR__ . '/../rules.example.php';
-assert(array_diff(array_keys($example), $R::SUPPORTED) === []);
+assert(array_diff(array_keys($example), $R::SUPPORTED, ['_options']) === []);
 
 $pc = $example['Computer'];
 $full = ['name' => 'PC-01', 'locations_id' => 3, 'users_id' => 7, 'groups_id' => ['5'], 'states_id' => 1, 'otherserial' => 'INV-1'];

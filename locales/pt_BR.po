@@ -9,3 +9,9 @@ msgstr ""
 
 msgid "Please fill in the required fields: %s"
 msgstr "Preencha os campos obrigatórios: %s"
+
+msgid "Group (department)"
+msgstr "Grupo (setor)"
+
+msgid "Default entity (company)"
+msgstr "Entidade padrão (empresa)"

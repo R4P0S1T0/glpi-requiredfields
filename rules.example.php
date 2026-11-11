@@ -7,6 +7,12 @@
  * Supported item types: Computer, Monitor, Printer, NetworkEquipment, Phone, Line, Rack, User.
  */
 return [
+    // Optional user/company behaviour, see README.
+    '_options' => [
+        'user_group_on_create' => true,           // new-user form gets a required Group field
+        'user_require_company' => true,           // later edits need a group and a non-root default entity
+        'exempt_profiles'      => ['Super-Admin'], // users holding these profiles skip the edit check
+    ],
     'Computer' => [
         'name'         => 'Name',
         'locations_id' => 'Location',

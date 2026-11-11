@@ -1,8 +1,9 @@
 <?php
 
-define('PLUGIN_REQUIREDFIELDS_VERSION', '1.1.0');
+define('PLUGIN_REQUIREDFIELDS_VERSION', '1.2.0');
 
 require_once __DIR__ . '/src/Rules.php';
+require_once __DIR__ . '/src/UserCompany.php';
 
 function plugin_version_requiredfields()
 {
@@ -41,6 +42,11 @@ function plugin_init_requiredfields()
             $types[$definition->getAssetClassName()] = 'plugin_requiredfields_validate';
         }
     }
+    if (PluginRequiredfieldsUserCompany::onCreate() || PluginRequiredfieldsUserCompany::onEdit()) {
+        $types['User'] = 'plugin_requiredfields_validate';
+        $PLUGIN_HOOKS['post_item_form']['requiredfields'] = [PluginRequiredfieldsUserCompany::class, 'showField'];
+        $PLUGIN_HOOKS['item_add']['requiredfields']       = ['User' => [PluginRequiredfieldsUserCompany::class, 'afterAdd']];
+    }
     $PLUGIN_HOOKS['pre_item_add']['requiredfields']    = $types;
     $PLUGIN_HOOKS['pre_item_update']['requiredfields'] = $types;
 }
@@ -72,6 +78,13 @@ function plugin_requiredfields_validate(CommonDBTM $item)
         ? PluginRequiredfieldsRules::forCustomAsset($item::getDefinition())
         : PluginRequiredfieldsRules::load()[$item::class] ?? [];
     $missing = PluginRequiredfieldsRules::missing($rules, $item->input, $current);
+    if ($item instanceof User) {
+        $input = $item->input;
+        $missing = array_merge($missing, $creating
+            ? PluginRequiredfieldsUserCompany::prepareAdd($input)
+            : PluginRequiredfieldsUserCompany::checkEdit($item, $input));
+        $item->input = $input;
+    }
     if ($missing) {
         Session::addMessageAfterRedirect(
             sprintf(__('Please fill in the required fields: %s', 'requiredfields'), implode(', ', $missing)),
